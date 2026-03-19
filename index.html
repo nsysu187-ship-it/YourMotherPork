@@ -335,7 +335,7 @@ function renderGame() {
     row.className='floor-row'+(allDone?' done-row':'');
     const lbl = document.createElement('div');
     lbl.className='floor-num';
-    lbl.textContent=(f+1)+'F';
+    lbl.textContent=(FLOORS-f)+'F';
     row.appendChild(lbl);
     for (let r=0;r<4;r++) {
       const cell = document.createElement('div');
