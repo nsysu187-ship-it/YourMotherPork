@@ -582,7 +582,7 @@ async function submitReview() {
   errEl.textContent = '';
   if (!starEl) { errEl.textContent = '請選擇星數'; return; }
   if (!text) { errEl.textContent = '請輸入留言內容'; return; }
-  await set(ref(db, `reviews/${discordUser.id}`), {
+  await push(ref(db, 'reviews'), {
     name: discordUser.username,
     avatar: discordUser.avatar || null,
     stars: parseInt(starEl.value),
