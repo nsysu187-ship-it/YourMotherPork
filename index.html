@@ -325,18 +325,20 @@ window.joinRoom = async function() {
   showScreen('screen-seat');
 }
 
-async function enterGame(code, r) {
+window.takeSeat = async function(r) {
+  const snap = await get(ref(db,`rooms/${roomCode}/online/${r}`));
+  if (snap.val()) { showToast('剛剛被人搶走了！'); return; }
   myRoom = r;
-  roomCode = code;
 
   const onlineRef = ref(db,`rooms/${roomCode}/online/${r}`);
   await set(onlineRef, true);
   onDisconnect(onlineRef).set(false);
 
-  if (unsubscribe) { unsubscribe(); unsubscribe = null; }
+  
+
   unsubscribe = onValue(ref(db,`rooms/${roomCode}`), snap => {
     const data = snap.val();
-    if (!data) { showToast('房間已解散'); localStorage.removeItem('roomCode'); localStorage.removeItem('myRoom'); goHome(); return; }
+    if (!data) { showToast('房主關閉了房間'); goHome(); return; }
     for (let f=0;f<FLOORS;f++)
       for (let s=0;s<4;s++)
         correct[f][s] = (data.floors&&data.floors[f]&&data.floors[f][s]!=null) ? data.floors[f][s] : null;
@@ -350,20 +352,10 @@ async function enterGame(code, r) {
   tag.className = 'my-tag my-tag-'+r;
   document.getElementById('room-code-display').textContent = "房間代碼："+roomCode;
   document.getElementById('col-h-'+r).classList.add('mine');
-
-  localStorage.setItem('roomCode', roomCode);
-  localStorage.setItem('myRoom', String(r));
-
   if ('wakeLock' in navigator) {
     try { await navigator.wakeLock.request('screen'); } catch(e) {}
   }
   showScreen('screen-game');
-}
-
-window.takeSeat = async function(r) {
-  const snap = await get(ref(db,`rooms/${roomCode}/online/${r}`));
-  if (snap.val()) { showToast('剛剛被人搶走了！'); return; }
-  await enterGame(roomCode, r);
 }
 
 window.leaveGame = async function() {
@@ -374,8 +366,6 @@ window.leaveGame = async function() {
     await set(onlineRef, false);
   }
   if (isHost) await remove(ref(db,`rooms/${roomCode}`));
-  localStorage.removeItem('roomCode');
-  localStorage.removeItem('myRoom');
   resetState();
   goHome();
 }
@@ -557,7 +547,9 @@ onValue(reviewsRef, snap => {
     console.log('child key:', child.key, 'val:', JSON.stringify(child.val()));
     items.push(child.val());
   });
+  console.log('before reverse:', items.length);
   items.reverse();
+  console.log('after reverse:', items.length);
 
   const total = items.reduce((s, r) => s + r.stars, 0);
   const avg = (total / items.length).toFixed(1);
@@ -566,6 +558,7 @@ onValue(reviewsRef, snap => {
   document.getElementById('rev-avg-num').textContent = avg;
   document.getElementById('rev-count').textContent = `（${items.length} 則留言）`;
   avgWrap.style.display = 'flex';
+  console.log('items count:', items.length, items);
   list.innerHTML = items.map(r => {
     const stars = '★'.repeat(r.stars) + '☆'.repeat(5 - r.stars);
     const d = new Date(r.ts);
@@ -616,23 +609,6 @@ handleDiscordCallback();
 document.getElementById('btn-discord-login').addEventListener('click', discordLogin);
 document.getElementById('btn-discord-logout').addEventListener('click', discordLogout);
 document.getElementById('btn-submit-review').addEventListener('click', submitReview);
-
-// 自動重連
-(async () => {
-  const savedCode = localStorage.getItem('roomCode');
-  const savedRoom = localStorage.getItem('myRoom');
-  if (savedCode && savedRoom !== null) {
-    const snap = await get(ref(db, `rooms/${savedCode}`));
-    if (snap.exists()) {
-      isHost = false;
-      showToast('自動重新連線中...');
-      await enterGame(savedCode, parseInt(savedRoom));
-    } else {
-      localStorage.removeItem('roomCode');
-      localStorage.removeItem('myRoom');
-    }
-  }
-})();
 </script>
 </body>
 </html>
