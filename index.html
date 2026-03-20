@@ -60,7 +60,7 @@ input[type=text]:focus{border-color:#aaa;}
 .prog{font-family:'Space Mono',monospace;font-size:12px;color:var(--muted);}
 .leave-btn{font-size:11px;color:var(--muted);background:none;border:1px solid var(--border);border-radius:6px;padding:4px 10px;cursor:pointer;}
 .leave-btn:hover{background:var(--bg);}
-.col-headers{display:grid;grid-template-columns:28px repeat(4,1fr);gap:5px;margin-bottom:6px;}
+.col-headers{display:grid;grid-template-columns:28px repeat(4,1fr);gap:5px;margin-bottom:6px;transition:grid-template-columns .3s;}
 .col-h{text-align:center;font-size:12px;font-weight:700;padding:6px 0;border-radius:8px;}
 .col-h.mine{border:2px solid;}
 .col-h-0{background:var(--b-l);color:var(--b-t);}.col-h-0.mine{border-color:var(--b-m);}
@@ -68,7 +68,7 @@ input[type=text]:focus{border-color:#aaa;}
 .col-h-2{background:var(--g-l);color:var(--g-t);}.col-h-2.mine{border-color:var(--g-m);}
 .col-h-3{background:var(--p-l);color:var(--p-t);}.col-h-3.mine{border-color:var(--p-m);}
 .floor-table{display:flex;flex-direction:column;gap:5px;}
-.floor-row{display:grid;grid-template-columns:28px repeat(4,1fr);gap:5px;align-items:center;}
+.floor-row{display:grid;grid-template-columns:28px repeat(4,1fr);gap:5px;align-items:center;transition:grid-template-columns .3s;}
 .floor-row.done-row{opacity:.45;}
 .floor-num{text-align:center;font-family:'Space Mono',monospace;font-size:11px;color:var(--muted);}
 .room-cell{display:flex;gap:3px;}
@@ -86,6 +86,9 @@ input[type=text]:focus{border-color:#aaa;}
 .plat-btn.elim:active{transform:none;}
 .not-mine .plat-btn{cursor:default;}
 .not-mine .plat-btn:active{transform:none;}
+/* 非自己的欄縮小顯示 */
+.plat-btn.small-mode{font-size:10px;padding:5px 0;}
+.col-h.small-mode{font-size:10px;padding:4px 2px;}
 .bottom-bar{display:flex;gap:8px;margin-top:14px;}
 .bottom-bar button{flex:1;padding:9px 0;border-radius:10px;border:1px solid var(--border);background:transparent;font-size:12px;color:var(--muted);font-family:'Noto Sans TC',sans-serif;cursor:pointer;}
 .bottom-bar button:hover{background:var(--card);color:var(--text);}
@@ -275,6 +278,7 @@ function showScreen(id) {
   document.querySelectorAll('.screen').forEach(s=>s.classList.remove('active'));
   const el = document.getElementById(id);
   el.classList.add('active');
+  document.getElementById('review-wrap').style.display = id === 'screen-home' ? '' : 'none';
 }
 function randCode() {
   const chars = 'ABCDEFGHJKLMNPQRSTUVWXYZ23456789';
@@ -433,6 +437,26 @@ function renderGame() {
       row.appendChild(cell);
     }
     table.appendChild(row);
+  }
+  applyGridLayout();
+}
+
+function applyGridLayout() {
+  if (myRoom === null) return;
+  const cols = [1,1,1,1];
+  cols[myRoom] = 3;
+  const colStr = `28px ${cols.map(c=>c+'fr').join(' ')}`;
+  document.querySelector('.col-headers').style.gridTemplateColumns = colStr;
+  document.querySelectorAll('.floor-row').forEach(row => {
+    row.style.gridTemplateColumns = colStr;
+  });
+  for (let r=0;r<4;r++) {
+    const isSmall = r !== myRoom;
+    document.querySelectorAll('.room-cell-'+r+' .plat-btn').forEach(btn => {
+      btn.classList.toggle('small-mode', isSmall);
+    });
+    const colH = document.getElementById('col-h-'+r);
+    if (colH) colH.classList.toggle('small-mode', isSmall);
   }
 }
 
