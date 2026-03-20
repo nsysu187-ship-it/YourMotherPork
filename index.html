@@ -223,7 +223,7 @@ window.createRoom = async function() {
   isHost = true;
   await set(ref(db,`rooms/${code}`), { createdAt: serverTimestamp(), online:[false,false,false,false], floors:null });
   document.getElementById('seat-hint').innerHTML =
-    `房間代碼：<b style="font-family:monospace;font-size:16px;letter-spacing:.1em;color:var(--text)">${code}</b><br><span style="font-size:11px;color:var(--muted)">選好座位後再把代碼傳給隊友</span>`;
+    `房間代碼：<b style="font-family:monospace;font-size:16px;letter-spacing:.1em;color:var(--text)">${code}</b><br><span style="font-size:11px;color:var(--muted)">可樂起床</span>`;
   updateSeatButtons([false,false,false,false]);
   showScreen('screen-seat');
 }
@@ -234,7 +234,7 @@ window.joinRoom = async function() {
   errEl.textContent = '';
   if (code.length !== 4) { errEl.textContent = '請輸入四位代碼'; return; }
   const snap = await get(ref(db,`rooms/${code}`));
-  if (!snap.exists()) { errEl.textContent = '找不到這個房間，確認代碼是否正確'; return; }
+  if (!snap.exists()) { errEl.textContent = '找不到房間啦，是在亂打什麼代碼'; return; }
   roomCode = code;
   isHost = false;
   const data = snap.val();
