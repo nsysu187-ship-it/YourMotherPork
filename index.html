@@ -281,7 +281,7 @@ function showScreen(id) {
   document.getElementById('review-wrap').style.display = id === 'screen-home' ? '' : 'none';
 }
 function randCode() {
-  const chars = 'ABCDEFGHJKLMNPQRSTUVWXYZ23456789';
+  const chars = '0123456789';
   return Array.from({length:4},()=>chars[Math.floor(Math.random()*chars.length)]).join('');
 }
 function updateSeatButtons(onlineArr) {
