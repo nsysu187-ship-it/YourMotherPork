@@ -531,7 +531,9 @@ function updateRevUI() {
 // ===== 留言系統 =====
 const reviewsRef = ref(db, 'reviews');
 
-onValue(query(reviewsRef, orderByChild('ts'), limitToLast(50)), snap => {
+onValue(reviewsRef, snap => {
+  console.log('snap exists:', snap.exists());
+  console.log('snap val:', JSON.stringify(snap.val()));
   const list = document.getElementById('review-list');
   const avgWrap = document.getElementById('rev-avg');
   if (!snap.exists()) {
@@ -540,8 +542,13 @@ onValue(query(reviewsRef, orderByChild('ts'), limitToLast(50)), snap => {
     return;
   }
   const items = [];
-  snap.forEach(child => items.push(child.val()));
+  snap.forEach(child => {
+    console.log('child key:', child.key, 'val:', JSON.stringify(child.val()));
+    items.push(child.val());
+  });
+  console.log('before reverse:', items.length);
   items.reverse();
+  console.log('after reverse:', items.length);
 
   const total = items.reduce((s, r) => s + r.stars, 0);
   const avg = (total / items.length).toFixed(1);
@@ -550,7 +557,7 @@ onValue(query(reviewsRef, orderByChild('ts'), limitToLast(50)), snap => {
   document.getElementById('rev-avg-num').textContent = avg;
   document.getElementById('rev-count').textContent = `（${items.length} 則留言）`;
   avgWrap.style.display = 'flex';
-
+  console.log('items count:', items.length, items);
   list.innerHTML = items.map(r => {
     const stars = '★'.repeat(r.stars) + '☆'.repeat(5 - r.stars);
     const d = new Date(r.ts);
