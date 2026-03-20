@@ -334,9 +334,7 @@ window.takeSeat = async function(r) {
   await set(onlineRef, true);
   onDisconnect(onlineRef).set(false);
 
-  if (isHost) {
-    onDisconnect(ref(db,`rooms/${roomCode}`)).remove();
-  }
+  
 
   unsubscribe = onValue(ref(db,`rooms/${roomCode}`), snap => {
     const data = snap.val();
@@ -354,6 +352,9 @@ window.takeSeat = async function(r) {
   tag.className = 'my-tag my-tag-'+r;
   document.getElementById('room-code-display').textContent = "房間代碼："+roomCode;
   document.getElementById('col-h-'+r).classList.add('mine');
+  if ('wakeLock' in navigator) {
+    try { await navigator.wakeLock.request('screen'); } catch(e) {}
+  }
   showScreen('screen-game');
 }
 
