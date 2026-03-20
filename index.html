@@ -123,10 +123,10 @@ input[type=text]:focus{border-color:#aaa;}
     <h2>選擇你的房間</h2>
     <p id="seat-hint" style="margin-bottom:12px;"></p>
     <div class="seats">
-      <button class="seat-btn seat-0" id="sb-0" onclick="takeSeat(0)">藍色</button>
-      <button class="seat-btn seat-1" id="sb-1" onclick="takeSeat(1)">橘色</button>
-      <button class="seat-btn seat-2" id="sb-2" onclick="takeSeat(2)">綠色</button>
-      <button class="seat-btn seat-3" id="sb-3" onclick="takeSeat(3)">紫色</button>
+      <button class="seat-btn seat-0" id="sb-0" onclick="takeSeat(0)">藍色1</button>
+      <button class="seat-btn seat-1" id="sb-1" onclick="takeSeat(1)">橘色2</button>
+      <button class="seat-btn seat-2" id="sb-2" onclick="takeSeat(2)">綠色3</button>
+      <button class="seat-btn seat-3" id="sb-3" onclick="takeSeat(3)">紫色4</button>
     </div>
     <button class="btn btn-secondary" style="margin-top:14px;" onclick="goHome()">返回</button>
   </div>
@@ -137,6 +137,7 @@ input[type=text]:focus{border-color:#aaa;}
   <div class="status-bar">
     <div style="display:flex;align-items:center;gap:10px;">
       <span id="my-tag" class="my-tag"></span>
+      <span id="room-code-display" style="font-family:monospace;font: size 14px;color:grey;letter-spacing:.1em;font: weight bold;"></span>
       <div class="dots">
         <div class="dot dot-0" id="dot-0"></div>
         <div class="dot dot-1" id="dot-1"></div>
@@ -223,7 +224,7 @@ window.createRoom = async function() {
   isHost = true;
   await set(ref(db,`rooms/${code}`), { createdAt: serverTimestamp(), online:[false,false,false,false], floors:null });
   document.getElementById('seat-hint').innerHTML =
-    `房間代碼：<b style="font-family:monospace;font-size:16px;letter-spacing:.1em;color:var(--text)">${code}</b><br><span style="font-size:11px;color:var(--muted)">可樂起床</span>`;
+    `房間代碼：<b style="font-family:monospace;font-size:16px;letter-spacing:.1em;color:var(--text)">${code}</b><br><span style="font-size:11px;color:var(--muted)">按照進入的房間 由左到右 選擇1234</span>`;
   updateSeatButtons([false,false,false,false]);
   showScreen('screen-seat');
 }
@@ -272,6 +273,7 @@ window.takeSeat = async function(r) {
   const tag = document.getElementById('my-tag');
   tag.textContent = '我是 '+roomNames[r];
   tag.className = 'my-tag my-tag-'+r;
+  document.getElementById('room-code-display').textContent = "房間代碼："+roomCode;
   document.getElementById('col-h-'+r).classList.add('mine');
   showScreen('screen-game');
 }
