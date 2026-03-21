@@ -127,6 +127,23 @@ input[type=text]:focus{border-color:#aaa;}
 .rev-avg .avg-num{font-family:'Space Mono',monospace;font-size:20px;font-weight:700;}
 .rev-avg .rev-count{font-size:12px;color:var(--muted);}
 .rev-empty{font-size:13px;color:var(--muted);text-align:center;padding:14px 0;}
+
+/* ===== 回覆系統 ===== */
+.rev-reply-btn{font-size:11px;color:var(--muted);background:none;border:1px solid var(--border);border-radius:6px;padding:3px 10px;cursor:pointer;margin-top:8px;}
+.rev-reply-btn:hover{background:var(--bg);color:var(--text);}
+.rev-replies{margin-top:10px;padding-top:10px;border-top:1px solid var(--border);display:flex;flex-direction:column;gap:8px;}
+.rev-reply-item{display:flex;gap:8px;align-items:flex-start;}
+.rev-reply-avatar{width:22px;height:22px;border-radius:50%;object-fit:cover;flex-shrink:0;}
+.rev-reply-avatar-placeholder{width:22px;height:22px;border-radius:50%;background:#5865F2;display:flex;align-items:center;justify-content:center;color:#fff;font-size:10px;font-weight:700;flex-shrink:0;}
+.rev-reply-body{flex:1;min-width:0;}
+.rev-reply-name{font-weight:700;font-size:12px;color:var(--text);}
+.rev-reply-text{font-size:12px;color:#555;line-height:1.5;margin-top:1px;}
+.rev-reply-time{font-size:10px;color:var(--muted);margin-top:2px;}
+.rev-reply-form{margin-top:10px;display:flex;gap:6px;align-items:flex-end;}
+.rev-reply-form textarea{flex:1;padding:7px 10px;border:1.5px solid var(--border);border-radius:8px;font-size:12px;font-family:'Noto Sans TC',sans-serif;background:var(--bg);color:var(--text);outline:none;resize:none;line-height:1.5;}
+.rev-reply-form textarea:focus{border-color:#aaa;}
+.rev-reply-form button{padding:7px 12px;border-radius:8px;border:none;background:var(--text);color:#fff;font-size:12px;font-weight:700;font-family:'Noto Sans TC',sans-serif;cursor:pointer;white-space:nowrap;}
+.rev-reply-form button:hover{opacity:.85;}
 </style>
 </head>
 <body>
@@ -553,7 +570,7 @@ onValue(reviewsRef, snap => {
   const items = [];
   snap.forEach(child => {
     console.log('child key:', child.key, 'val:', JSON.stringify(child.val()));
-    items.push(child.val());
+    items.push({ ...child.val(), _key: child.key });
   });
   console.log('before reverse:', items.length);
   items.reverse();
@@ -574,6 +591,26 @@ onValue(reviewsRef, snap => {
     const avatarHtml = r.avatar
       ? `<img class="rev-avatar" src="${escHtml(r.avatar)}" alt="">`
       : `<div class="rev-avatar-placeholder">${escHtml(r.name.charAt(0).toUpperCase())}</div>`;
+    let repliesHtml = '';
+    if (r.replies) {
+      const replyArr = Object.values(r.replies).sort((a,b) => a.ts - b.ts);
+      repliesHtml = '<div class="rev-replies">' + replyArr.map(rep => {
+        const rd = new Date(rep.ts);
+        const repTime = `${rd.getFullYear()}/${rd.getMonth()+1}/${rd.getDate()} ${String(rd.getHours()).padStart(2,'0')}:${String(rd.getMinutes()).padStart(2,'0')}`;
+        const repAvatar = rep.avatar
+          ? `<img class="rev-reply-avatar" src="${escHtml(rep.avatar)}" alt="">`
+          : `<div class="rev-reply-avatar-placeholder">${escHtml(rep.name.charAt(0).toUpperCase())}</div>`;
+        return `<div class="rev-reply-item">
+          ${repAvatar}
+          <div class="rev-reply-body">
+            <div class="rev-reply-name">${escHtml(rep.name)}</div>
+            <div class="rev-reply-text">${escHtml(rep.text)}</div>
+            <div class="rev-reply-time">${repTime}</div>
+          </div>
+        </div>`;
+      }).join('') + '</div>';
+    }
+    const safeKey = escHtml(r._key || '');
     return `<div class="review-item">
       <div class="rev-header">
         ${avatarHtml}
@@ -582,12 +619,40 @@ onValue(reviewsRef, snap => {
       </div>
       <div class="rev-text">${escHtml(r.text)}</div>
       <div class="rev-time">${timeStr}</div>
+      ${repliesHtml}
+      <button class="rev-reply-btn" onclick="toggleReplyForm(this, '${safeKey}')">💬 回覆</button>
     </div>`;
   }).join('');
 });
 
 function escHtml(s) {
   return String(s).replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;');
+}
+
+window.toggleReplyForm = function(btn, revKey) {
+  if (!discordUser) { showToast('請先用 Discord 登入才能回覆'); return; }
+  const item = btn.closest('.review-item');
+  let form = item.querySelector('.rev-reply-form');
+  if (form) { form.remove(); return; }
+  form = document.createElement('div');
+  form.className = 'rev-reply-form';
+  form.innerHTML = `<textarea rows="2" placeholder="輸入回覆...（100字以內）" maxlength="100"></textarea><button>送出</button>`;
+  form.querySelector('button').addEventListener('click', () => submitReply(revKey, form));
+  item.insertBefore(form, btn);
+  form.querySelector('textarea').focus();
+}
+
+async function submitReply(revKey, form) {
+  if (!discordUser) { showToast('請先用 Discord 登入'); return; }
+  const text = form.querySelector('textarea').value.trim();
+  if (!text) { showToast('回覆不能是空白的'); return; }
+  await push(ref(db, `reviews/${revKey}/replies`), {
+    name: discordUser.username,
+    avatar: discordUser.avatar || null,
+    text,
+    ts: Date.now()
+  });
+  showToast('回覆送出！');
 }
 
 async function submitReview() {
