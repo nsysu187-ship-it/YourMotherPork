@@ -120,7 +120,7 @@ input[type=text]:focus{border-color:#aaa;}
 .review-item .rev-avatar-placeholder{width:28px;height:28px;border-radius:50%;background:#5865F2;display:flex;align-items:center;justify-content:center;color:#fff;font-size:12px;font-weight:700;flex-shrink:0;}
 .review-item .rev-name{font-weight:700;font-size:13px;flex:1;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;}
 .review-item .rev-stars{color:#F5A623;font-size:13px;letter-spacing:1px;flex-shrink:0;}
-.review-item .rev-text{font-size:13px;color:#444;line-height:1.6;}
+.review-item .rev-text{font-size:13px;color:#444;line-height:1.6;white-space:pre-wrap;word-break:break-word;}
 .review-item .rev-time{font-size:10px;color:var(--muted);margin-top:4px;}
 .rev-avg{display:flex;align-items:center;gap:8px;margin-bottom:14px;}
 .rev-avg .big-stars{font-size:18px;color:#F5A623;}
@@ -137,7 +137,7 @@ input[type=text]:focus{border-color:#aaa;}
 .rev-reply-avatar-placeholder{width:22px;height:22px;border-radius:50%;background:#5865F2;display:flex;align-items:center;justify-content:center;color:#fff;font-size:10px;font-weight:700;flex-shrink:0;}
 .rev-reply-body{flex:1;min-width:0;}
 .rev-reply-name{font-weight:700;font-size:12px;color:var(--text);}
-.rev-reply-text{font-size:12px;color:#555;line-height:1.5;margin-top:1px;}
+.rev-reply-text{font-size:12px;color:#555;line-height:1.5;margin-top:1px;white-space:pre-wrap;word-break:break-word;}
 .rev-reply-time{font-size:10px;color:var(--muted);margin-top:2px;}
 .rev-reply-form{margin-top:10px;display:flex;gap:6px;align-items:flex-end;}
 .rev-reply-form textarea{flex:1;padding:7px 10px;border:1.5px solid var(--border);border-radius:8px;font-size:12px;font-family:'Noto Sans TC',sans-serif;background:var(--bg);color:var(--text);outline:none;resize:none;line-height:1.5;}
@@ -604,7 +604,7 @@ onValue(reviewsRef, snap => {
           ${repAvatar}
           <div class="rev-reply-body">
             <div class="rev-reply-name">${escHtml(rep.name)}</div>
-            <div class="rev-reply-text">${escHtml(rep.text)}</div>
+            <div class="rev-reply-text">${escHtmlNl(rep.text)}</div>
             <div class="rev-reply-time">${repTime}</div>
           </div>
         </div>`;
@@ -617,7 +617,7 @@ onValue(reviewsRef, snap => {
         <span class="rev-name">${escHtml(r.name)}</span>
         <span class="rev-stars">${stars}</span>
       </div>
-      <div class="rev-text">${escHtml(r.text)}</div>
+      <div class="rev-text">${escHtmlNl(r.text)}</div>
       <div class="rev-time">${timeStr}</div>
       ${repliesHtml}
       <button class="rev-reply-btn" onclick="toggleReplyForm(this, '${safeKey}')">💬 回覆</button>
@@ -627,6 +627,9 @@ onValue(reviewsRef, snap => {
 
 function escHtml(s) {
   return String(s).replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;');
+}
+function escHtmlNl(s) {
+  return escHtml(s).replace(/\n/g,'<br>');
 }
 
 window.toggleReplyForm = function(btn, revKey) {
