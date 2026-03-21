@@ -302,8 +302,9 @@ window.createRoom = async function() {
   roomCode = code;
   isHost = true;
   await set(ref(db,`rooms/${code}`), { createdAt: serverTimestamp(), online:[false,false,false,false], floors:null });
+  history.pushState(null, '', `?room=${code}`);
   document.getElementById('seat-hint').innerHTML =
-    `房間代碼：<b style="font-family:monospace;font-size:16px;letter-spacing:.1em;color:var(--text)">${code}</b><br><span style="font-size:11px;color:var(--muted)">按照進入的房間 由左到右 選擇1234</span>`;
+    `房間代碼：<b style="font-family:monospace;font-size:16px;letter-spacing:.1em;color:var(--text)">${code}</b><br><span style="font-size:11px;color:var(--muted)">按照進入的房間 由左到右 選擇1234</span><br><br><button class="btn btn-secondary" style="margin-top:4px;font-size:12px;padding:8px 0;" onclick="copyInviteLink()">📋 複製邀請連結</button>`;
   updateSeatButtons([false,false,false,false]);
   showScreen('screen-seat');
 }
@@ -374,6 +375,7 @@ window.goHome = function() {
   resetState();
   document.getElementById('join-code').value = '';
   document.getElementById('join-err').textContent = '';
+  history.replaceState(null, '', location.pathname);
   showScreen('screen-home');
 }
 
@@ -398,6 +400,11 @@ window.confirmReset = function() {
 
 window.copyCode = function() {
   navigator.clipboard.writeText(roomCode).then(()=>showToast('代碼已複製：'+roomCode));
+}
+
+window.copyInviteLink = function() {
+  const url = `${location.origin}${location.pathname}?room=${roomCode}`;
+  navigator.clipboard.writeText(url).then(()=>showToast('邀請連結已複製！貼給隊友就能直接進入 🎉'));
 }
 
 function renderGame() {
@@ -609,6 +616,14 @@ handleDiscordCallback();
 document.getElementById('btn-discord-login').addEventListener('click', discordLogin);
 document.getElementById('btn-discord-logout').addEventListener('click', discordLogout);
 document.getElementById('btn-submit-review').addEventListener('click', submitReview);
+
+// 自動偵測邀請連結
+const urlParams = new URLSearchParams(location.search);
+const inviteCode = urlParams.get('room');
+if (inviteCode) {
+  document.getElementById('join-code').value = inviteCode.toUpperCase();
+  joinRoom();
+}
 </script>
 </body>
 </html>
